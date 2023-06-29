@@ -1,0 +1,40 @@
+let mapleader=" "
+
+"set some highlighting
+"highlight visual cterm=reverse ctermbg=NONE
+"
+set nocp
+set number
+set relativenumber
+set syntax=on
+
+set ruler
+
+set nowrap
+
+set tabstop=4
+set softtabstop=4
+set shiftwidth=4
+set expandtab
+"
+set scrolloff=8
+set noswapfile
+set smartindent
+"
+set noerrorbells
+set hlsearch
+    hi search cterm=reverse ctermbg=NONE
+    set incsearch
+    set showcmd
+"
+"
+"keybindings
+nnoremap j gj
+nnoremap k gk
+
+"no arrow keys for you"
+noremap <Up> <Nop>
+noremap <Down> <Nop>
+noremap <Left> <Nop>
+noremap <Right> <Nop>
+nnoremap<leader>s :setlocal spell!<CR>

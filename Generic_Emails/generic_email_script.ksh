@@ -232,7 +232,7 @@ fi
 email_file=$2
 if ! [[ -s $email_file ]];
 then
-    echo "File does not exist or is empty. Aborting"
+    echo "parameter file does not exist or is empty. Aborting"
     exit 1
 fi
 
@@ -240,7 +240,7 @@ fi
 . $email_file
 if [[ $? -ne 0 ]];
 then
-    echo "not able to source provided file. Aborting"
+    echo "not able to source provided parameter file. Aborting"
     exit 1
 fi
 

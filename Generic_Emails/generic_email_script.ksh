@@ -1,4 +1,5 @@
 #!/bin/ksh
+
 ##############################################################################
 #
 # Script Name: generic_email_script.ksh
@@ -7,8 +8,6 @@
 # Usage: Given some parameter with exact variables names, send email with
 #   provided parameters
 #
-# Command: /path/to/generic_email_script.ksh $PATH_TO_PARAMETER_FILE
-#
 ##############################################################################
 
 ###########################################
@@ -16,6 +15,63 @@
 # Helper Functions and Variables
 #
 ###########################################
+
+critical_flag=0
+informational_flag=0
+warning_flag=0
+
+usage(){
+    echo "invalid usage of script"
+    echo "Usage: /path/to/this/script.ksh [-c|-i|-w] parameter_file.ksh"
+}
+
+is_critical(){
+    if [[ $critical_flag -eq 1 ]]
+    then
+        return 1
+    else
+        return 0
+    fi
+}
+
+is_informational(){
+    if [[ $informational_flag -eq 1 ]]
+    then
+        return 1
+    else
+        return 0
+    fi
+}
+
+is_warning(){
+    if [[ $warning_flag -eq 1 ]]
+    then
+        return 1
+    else
+        return 0
+    fi
+}
+
+
+determine_subject(){
+    is_critical
+    if [[ $? -eq 1 ]]
+    then
+        echo $email_critical_subject
+    fi
+
+    is_warning
+    if [[ $? -eq 1 ]]
+    then
+        echo $email_warning_subject
+    fi
+
+    is_informational
+    if [[ $? -eq 1 ]]
+    then
+        echo $email_informational_subject
+    fi
+}
 
 check_parm_value(){
     if [[ $1 == "" ]];
@@ -26,35 +82,66 @@ check_parm_value(){
     fi
 }
 
+check_flags(){
+    sumOfFlags=$(($critical_flag + $informational_flag + $warning_flag))
+    if [[ $sumOfFlags -gt 1 ]]
+    then
+        return 1
+    fi
+}
+
 ###########################################
 #
-# Start: Initial checks and variables
+# Start: initialize options and variables
 #
 ###########################################
 
-if [[ $# -lt 1 ]];
+if [[ $# -ne 2 ]];
 then
     echo "not enough arguments. Aborting"
     exit 1
 
 fi
 
-email_file=$1
+getopts "ciw" opt;
+case $opt in
+c) critical_flag=1
+;;
+i) informational_flag=1
+;;
+w) warning_flag=1
+;;
+*) usage; exit 1;
+;;
+esac
 
-if ! [[ -f $email_file ]];
+
+check_flags
+if [[ $? -ne 0 ]];
+then
+    echo "more than 1 flag is on. Aborting"
+    echo "Critical Flag:" $critical_flag
+    echo "Warning Flag:" $warning_flag
+    echo "Informational Flag" $informational_flag
+    exit 1
+fi
+
+
+email_file=$2
+if ! [[ -s $email_file ]];
 then
     echo "File does not exist. Exiting"
     exit 1
 fi
 
-source $email_file
 
+. $email_file
 if [[ $? -ne 0 ]];
 then
     echo "not able to source provided file. Aborting"
     exit 1
 fi
-    
+
 
 ###########################################
 #
@@ -69,6 +156,7 @@ then
     exit 1
 fi
 
+
 check_parm_value $email_from
 if [[ $? -eq 1 ]];
 then
@@ -76,12 +164,16 @@ then
     exit 1
 fi
 
+
+email_subject=`determine_subject`
+
 check_parm_value $email_subject
 if [[ $? -eq 1 ]];
 then
     echo "Email Subject not found. Aborting."
     exit 1
 fi
+
 
 check_parm_value $email_to
 if [[ $? -eq 1 ]];
@@ -98,11 +190,13 @@ fi
 
 cmd="echo -e '$email_body' | mailx -S from=$email_from -s \"$email_subject\""
 
+
 check_parm_value $email_cc
 if [[ $? -eq 0 ]];
 then
     cmd="$cmd -c $email_cc"
 fi
+
 
 check_parm_value $email_attachment
 if [[ $? -eq 0 ]];
@@ -110,6 +204,7 @@ then
     cmd="$cmd -a $email_attachment"
 fi
 
+#do this step last
 cmd="$cmd $email_to"
 
 ###########################################
@@ -118,7 +213,8 @@ cmd="$cmd $email_to"
 #
 ###########################################
 
-eval "$cmd"
+#eval "$cmd"
+echo "$cmd"
 
 if [[ $? -ne 0 ]];
 then

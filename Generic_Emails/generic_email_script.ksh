@@ -199,7 +199,8 @@ determine_attachment(){
 
 if [[ $# -ne 2 ]];
 then
-    echo "not enough arguments. Aborting"
+    echo "not enough arguments passed to the script."
+    echo "Aborting"
     exit 1
 fi
 
@@ -221,10 +222,11 @@ esac
 check_flags
 if [[ $? -ne 0 ]];
 then
-    echo "more than 1 flag is on. Aborting"
+    echo "more than 1 flag is on."
     echo "Critical Flag: " $critical_flag
     echo "Warning Flag: " $warning_flag
     echo "Informational Flag: " $informational_flag
+    echo "Aborting"
     exit 1
 fi
 
@@ -232,7 +234,8 @@ fi
 email_file=$2
 if ! [[ -s $email_file ]];
 then
-    echo "parameter file does not exist or is empty. Aborting"
+    echo "parameter file does not exist or is empty."
+    echo "Aborting"
     exit 1
 fi
 
@@ -240,7 +243,8 @@ fi
 . $email_file
 if [[ $? -ne 0 ]];
 then
-    echo "not able to source provided parameter file. Aborting"
+    echo "not able to source provided parameter file."
+    echo "Aborting"
     exit 1
 fi
 
@@ -255,7 +259,8 @@ l_email_body=`determine_body`
 check_parm_value $l_email_body
 if [[ $? -eq 1 ]];
 then
-    echo "Email Body not found. Aborting."
+    echo "Email Body not found in the given paraameter file for the flag passed to the script."
+    echo "Aborting"
     exit 1
 fi
 
@@ -264,7 +269,8 @@ l_email_from=`determine_from`
 check_parm_value $l_email_from
 if [[ $? -eq 1 ]];
 then
-    echo "Email From not found. Aborting."
+    echo "Email From not found in the given parameter file for the flag passed to the script."
+    echo "Aborting"
     exit 1
 fi
 
@@ -273,7 +279,8 @@ l_email_subject=`determine_subject`
 check_parm_value $l_email_subject
 if [[ $? -eq 1 ]];
 then
-    echo "Email Subject not found. Aborting."
+    echo "Email Subject not found in the given parameter file for the flag passed to the script."
+    echo "Aborting"
     exit 1
 fi
 
@@ -282,7 +289,8 @@ l_email_to=`determine_to`
 check_parm_value $l_email_to
 if [[ $? -eq 1 ]];
 then
-    echo "Email To not found. Aborting."
+    echo "Email To not found in the given parameter file for the flag passed to the script."
+    echo "Aborting"
     exit 1
 fi
 
@@ -302,7 +310,7 @@ if [[ $? -eq 0 ]];
 then
     cmd="$cmd -c $l_email_cc"
 else
-    echo "no associated cc parameter in given config file. skipping"
+    echo "no associated cc parameter in given parameter file. skipping"
 fi
 
 l_email_attachment=`determine_attachment`
@@ -326,11 +334,12 @@ cmd="$cmd $l_email_to"
 ###########################################
 
 
-#eval "$cmd"
-echo "$cmd"
+eval "$cmd"
+#echo "$cmd"
 if [[ $? -ne 0 ]];
 then
-    echo "NOT ABLE TO RUN DYNAMIC COMMAND. ABORTING"
+    echo "NOT ABLE TO RUN DYNAMIC COMMAND."
     echo "COMMAND CREATED: $cmd"
+    echo "ABORTING"
     exit 1
 fi

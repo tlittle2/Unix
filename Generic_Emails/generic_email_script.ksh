@@ -1,5 +1,4 @@
 #!/bin/ksh
-
 ##############################################################################
 #
 # Script Name: generic_email_script.ksh
@@ -9,6 +8,7 @@
 #   provided parameters
 #
 ##############################################################################
+
 
 ###########################################
 #
@@ -90,18 +90,20 @@ check_flags(){
     fi
 }
 
+
 ###########################################
 #
 # Start: initialize options and variables
 #
 ###########################################
 
+
 if [[ $# -ne 2 ]];
 then
     echo "not enough arguments. Aborting"
     exit 1
-
 fi
+
 
 getopts "ciw" opt;
 case $opt in
@@ -182,11 +184,13 @@ then
     exit 1
 fi
 
+
 ###########################################
 #
 # Build Dynamic Command with left over variables (if they exist)
 #
 ###########################################
+
 
 cmd="echo -e '$email_body' | mailx -S from=$email_from -s \"$email_subject\""
 
@@ -204,8 +208,10 @@ then
     cmd="$cmd -a $email_attachment"
 fi
 
+
 #do this step last
 cmd="$cmd $email_to"
+
 
 ###########################################
 #
@@ -213,8 +219,10 @@ cmd="$cmd $email_to"
 #
 ###########################################
 
+
 #eval "$cmd"
 echo "$cmd"
+
 
 if [[ $? -ne 0 ]];
 then

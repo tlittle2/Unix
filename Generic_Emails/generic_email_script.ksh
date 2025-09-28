@@ -4,7 +4,7 @@
 # Script Name: generic_email_script.ksh
 # Author: Trevor Little
 # Purpose: Provide generic means to send emails to people
-# Usage: Given some parameter with exact variables names, send email with
+# Usage: Given some parameter file with exact variables names, send email with
 #   provided parameters
 #
 ##############################################################################
@@ -302,7 +302,7 @@ if [[ $? -eq 0 ]];
 then
     cmd="$cmd -c $l_email_cc"
 else
-    echo "no associated cc parameter in config file. skipping"
+    echo "no associated cc parameter in given config file. skipping"
 fi
 
 l_email_attachment=`determine_attachment`
@@ -311,7 +311,7 @@ if [[ $? -eq 0 ]];
 then
     cmd="$cmd -a $l_email_attachment"
 else
-    echo "no associated attachment parameter in config file. skipping"
+    echo "no associated attachment parameter in given config file. skipping"
 fi
 
 

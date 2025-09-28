@@ -1,6 +1,7 @@
 email_critical_body="BODY"; export email_critical_body
 email_warning_body="Body"; export email_warning_body
-email_informational_body="body"; export email_informational_body
+#email_informational_body="body"; export email_informational_body
+email_informational_body=`file=\`basename "/home/trevor-little/installScript.sh"\`; lines=\`wc -l $file\`; echo $lines`; export email_informational_body
 
 email_critical_from="TREVOR.LITTLE@GMAIL.COM"; export email_critical_from
 email_warning_from="Trevor.little@gmail.com"; export email_warning_from

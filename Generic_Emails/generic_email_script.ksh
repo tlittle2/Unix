@@ -21,7 +21,7 @@ informational_flag=0
 warning_flag=0
 
 usage(){
-    echo "invalid usage of script"
+    echo -e "invalid usage of script. Aborting. \n"
     echo "Usage: /path/to/this/script.ksh [-c|-i|-w] parameter_file.ksh"
 }
 
@@ -53,6 +53,23 @@ is_warning(){
 }
 
 
+check_parm_value(){
+    if [[ $1 == "" ]];
+    then
+        return 1
+    else
+        return 0
+    fi
+}
+
+check_flags(){
+    sumOfFlags=$(($critical_flag + $informational_flag + $warning_flag))
+    if [[ $sumOfFlags -gt 1 ]]
+    then
+        return 1
+    fi
+}
+
 determine_subject(){
     is_critical
     if [[ $? -eq 1 ]]
@@ -73,23 +90,105 @@ determine_subject(){
     fi
 }
 
-check_parm_value(){
-    if [[ $1 == "" ]];
+determine_from(){
+    is_critical
+    if [[ $? -eq 1 ]]
     then
-        return 1
-    else
-        return 0
+        echo $email_critical_from
+    fi
+
+    is_warning
+    if [[ $? -eq 1 ]]
+    then
+        echo $email_warning_from
+    fi
+
+    is_informational
+    if [[ $? -eq 1 ]]
+    then
+        echo $email_informational_from
     fi
 }
 
-check_flags(){
-    sumOfFlags=$(($critical_flag + $informational_flag + $warning_flag))
-    if [[ $sumOfFlags -gt 1 ]]
+determine_to(){
+    is_critical
+    if [[ $? -eq 1 ]]
     then
-        return 1
+        echo $email_critical_to
+    fi
+
+    is_warning
+    if [[ $? -eq 1 ]]
+    then
+        echo $email_warning_to
+    fi
+
+    is_informational
+    if [[ $? -eq 1 ]]
+    then
+        echo $email_informational_to
     fi
 }
 
+determine_body(){
+    is_critical
+    if [[ $? -eq 1 ]]
+    then
+        echo $email_critical_body
+    fi
+
+    is_warning
+    if [[ $? -eq 1 ]]
+    then
+        echo $email_warning_body
+    fi
+
+    is_informational
+    if [[ $? -eq 1 ]]
+    then
+        echo $email_informational_body
+    fi
+}
+
+determine_cc(){
+    is_critical
+    if [[ $? -eq 1 ]]
+    then
+        echo $email_critical_cc
+    fi
+
+    is_warning
+    if [[ $? -eq 1 ]]
+    then
+        echo $email_warning_cc
+    fi
+
+    is_informational
+    if [[ $? -eq 1 ]]
+    then
+        echo $email_informational_cc
+    fi
+}
+
+determine_attachment(){
+    is_critical
+    if [[ $? -eq 1 ]]
+    then
+        echo $email_critical_attachment
+    fi
+
+    is_warning
+    if [[ $? -eq 1 ]]
+    then
+        echo $email_warning_attachment
+    fi
+
+    is_informational
+    if [[ $? -eq 1 ]]
+    then
+        echo $email_informational_attachment
+    fi
+}
 
 ###########################################
 #
@@ -107,24 +206,25 @@ fi
 
 getopts "ciw" opt;
 case $opt in
-c) critical_flag=1
-;;
-i) informational_flag=1
-;;
-w) warning_flag=1
-;;
-*) usage; exit 1;
-;;
+    c) critical_flag=1
+    ;;
+    i) informational_flag=1
+    ;;
+    w) warning_flag=1
+    ;;
+    *) usage; exit 1;
+    ;;
+    ?) usage; exit 1;
+    ;;
 esac
-
 
 check_flags
 if [[ $? -ne 0 ]];
 then
     echo "more than 1 flag is on. Aborting"
-    echo "Critical Flag:" $critical_flag
-    echo "Warning Flag:" $warning_flag
-    echo "Informational Flag" $informational_flag
+    echo "Critical Flag: " $critical_flag
+    echo "Warning Flag: " $warning_flag
+    echo "Informational Flag: " $informational_flag
     exit 1
 fi
 
@@ -132,7 +232,7 @@ fi
 email_file=$2
 if ! [[ -s $email_file ]];
 then
-    echo "File does not exist. Exiting"
+    echo "File does not exist or is empty. Aborting"
     exit 1
 fi
 
@@ -151,7 +251,8 @@ fi
 #
 ###########################################
 
-check_parm_value $email_body
+l_email_body=`determine_body`
+check_parm_value $l_email_body
 if [[ $? -eq 1 ]];
 then
     echo "Email Body not found. Aborting."
@@ -159,7 +260,8 @@ then
 fi
 
 
-check_parm_value $email_from
+l_email_from=`determine_from`
+check_parm_value $l_email_from
 if [[ $? -eq 1 ]];
 then
     echo "Email From not found. Aborting."
@@ -167,9 +269,8 @@ then
 fi
 
 
-email_subject=`determine_subject`
-
-check_parm_value $email_subject
+l_email_subject=`determine_subject`
+check_parm_value $l_email_subject
 if [[ $? -eq 1 ]];
 then
     echo "Email Subject not found. Aborting."
@@ -177,7 +278,8 @@ then
 fi
 
 
-check_parm_value $email_to
+l_email_to=`determine_to`
+check_parm_value $l_email_to
 if [[ $? -eq 1 ]];
 then
     echo "Email To not found. Aborting."
@@ -192,25 +294,29 @@ fi
 ###########################################
 
 
-cmd="echo -e '$email_body' | mailx -S from=$email_from -s \"$email_subject\""
+cmd="echo -e '$l_email_body' | mailx -S from=$l_email_from -s \"$l_email_subject\""
 
-
-check_parm_value $email_cc
+l_email_cc=`determine_cc`
+check_parm_value $l_email_cc
 if [[ $? -eq 0 ]];
 then
-    cmd="$cmd -c $email_cc"
+    cmd="$cmd -c $l_email_cc"
+else
+    echo "no associated cc parameter in config file. skipping"
 fi
 
-
-check_parm_value $email_attachment
+l_email_attachment=`determine_attachment`
+check_parm_value $l_email_attachment
 if [[ $? -eq 0 ]];
 then
-    cmd="$cmd -a $email_attachment"
+    cmd="$cmd -a $l_email_attachment"
+else
+    echo "no associated attachment parameter in config file. skipping"
 fi
 
 
 #do this step last
-cmd="$cmd $email_to"
+cmd="$cmd $l_email_to"
 
 
 ###########################################
@@ -222,8 +328,6 @@ cmd="$cmd $email_to"
 
 #eval "$cmd"
 echo "$cmd"
-
-
 if [[ $? -ne 0 ]];
 then
     echo "NOT ABLE TO RUN DYNAMIC COMMAND. ABORTING"

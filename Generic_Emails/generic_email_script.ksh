@@ -21,8 +21,9 @@ informational_flag=0
 warning_flag=0
 
 usage(){
-    echo -e "invalid usage of script. Aborting. \n"
-    echo "Usage: /path/to/this/script.ksh [-c|-i|-w] parameter_file.ksh"
+    echo -e "INVALID USAGE OF SCRIPT.\n"
+    echo "Usage: /path/to/this/script.ksh [-c|-i|-w] /path/to/parameter_file.ksh"
+    echo "Aborting"
 }
 
 is_critical(){

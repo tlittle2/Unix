@@ -40,10 +40,6 @@ usage(){
     abort_message "INVALID USAGE OF SCRIPT.\nUsage: /path/to/this/script.ksh [-c|-i|-w] /path/to/parameter_file.ksh"
 }
 
-abort_for_required_parms(){
-    abort_message "$1 not found in the given parameter file for the flag passed to the script."
-}
-
 skip_optional_parms_msg(){
     echo "no associated $1 parameter in given config file. skipping"
 }
@@ -114,7 +110,7 @@ check_required_parms(){ #parm to check is the last parameter on purpose
     check_parm_value $parm_to_check
     if [[ $? -eq $off ]];
     then
-        abort_for_required_parms $error_msg_prefix
+        abort_message "$1 not found in the given parameter file for the flag passed to the script."
     fi
 }
 

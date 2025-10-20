@@ -9,83 +9,99 @@
 #
 ##############################################################################
 
-
 ###########################################
 #
 # Helper Functions and Variables
 #
 ###########################################
 
-critical_flag=0
-informational_flag=0
-warning_flag=0
+on=1
+off=0
+critical_flag=$off
+informational_flag=$off
+warning_flag=$off
+
+abort_message(){
+    printf "$1\n"
+    echo "Aborting"
+    exit 1
+}
 
 usage(){
-    echo -e "INVALID USAGE OF SCRIPT.\n"
-    echo "Usage: /path/to/this/script.ksh [-c|-i|-w] /path/to/parameter_file.ksh"
-    echo "Aborting"
+    abort_message "INVALID USAGE OF SCRIPT.\nUsage: /path/to/this/script.ksh [-c|-i|-w] /path/to/parameter_file.ksh"
+}
+
+abort_for_required_parms(){
+    abort_message "$1 not found in the given parameter file for the flag passed to the script."
+}
+
+skip_optional_parms_msg(){
+    echo "no associated $1 parameter in given config file. skipping"
+}
+
+eval_flag(){
+    flag=$1
+
+    if [[ $flag -eq $on ]]
+    then
+        return $on
+    else
+        return $off
+    fi
+
 }
 
 is_critical(){
-    if [[ $critical_flag -eq 1 ]]
-    then
-        return 1
-    else
-        return 0
-    fi
+    eval_flag $critical_flag
+    return $?
 }
 
 is_informational(){
-    if [[ $informational_flag -eq 1 ]]
-    then
-        return 1
-    else
-        return 0
-    fi
+    eval_flag $informational_flag
+    return $?
 }
 
 is_warning(){
-    if [[ $warning_flag -eq 1 ]]
-    then
-        return 1
-    else
-        return 0
-    fi
+    eval_flag $warning_flag
+    return $?
 }
 
 
 check_parm_value(){
     if [[ $1 == "" ]];
     then
-        return 1
+        return $off
     else
-        return 0
+        return $on
     fi
 }
 
 check_flags(){
+
     sumOfFlags=$(($critical_flag + $informational_flag + $warning_flag))
-    if [[ $sumOfFlags -gt 1 ]]
+
+    if [[ $sumOfFlags -gt $on ]]
     then
-        return 1
+        abort_message "more than 1 flag is on.\nCritical Flag: $critical_flag\nWarning Flag: $warning_flag\nInformational Flag: $informational_flag"
     fi
+
 }
 
 determine_subject(){
     is_critical
-    if [[ $? -eq 1 ]]
+    if [[ $? -eq $on ]]
     then
         echo $email_critical_subject
     fi
 
     is_warning
-    if [[ $? -eq 1 ]]
+    if [[ $? -eq $on ]]
     then
         echo $email_warning_subject
     fi
 
     is_informational
-    if [[ $? -eq 1 ]]
+    if [[ $? -eq $on ]]
     then
         echo $email_informational_subject
     fi
@@ -93,19 +109,19 @@ determine_subject(){
 
 determine_from(){
     is_critical
-    if [[ $? -eq 1 ]]
+    if [[ $? -eq $on ]]
     then
         echo $email_critical_from
     fi
 
     is_warning
-    if [[ $? -eq 1 ]]
+    if [[ $? -eq $on ]]
     then
         echo $email_warning_from
     fi
 
     is_informational
-    if [[ $? -eq 1 ]]
+    if [[ $? -eq $on ]]
     then
         echo $email_informational_from
     fi
@@ -113,19 +129,19 @@ determine_from(){
 
 determine_to(){
     is_critical
-    if [[ $? -eq 1 ]]
+    if [[ $? -eq $on ]]
     then
         echo $email_critical_to
     fi
 
     is_warning
-    if [[ $? -eq 1 ]]
+    if [[ $? -eq $on ]]
     then
         echo $email_warning_to
     fi
 
     is_informational
-    if [[ $? -eq 1 ]]
+    if [[ $? -eq $on ]]
     then
         echo $email_informational_to
     fi
@@ -133,19 +149,19 @@ determine_to(){
 
 determine_body(){
     is_critical
-    if [[ $? -eq 1 ]]
+    if [[ $? -eq $on ]]
     then
         echo $email_critical_body
     fi
 
     is_warning
-    if [[ $? -eq 1 ]]
+    if [[ $? -eq $on ]]
     then
         echo $email_warning_body
     fi
 
     is_informational
-    if [[ $? -eq 1 ]]
+    if [[ $? -eq $on ]]
     then
         echo $email_informational_body
     fi
@@ -153,19 +169,19 @@ determine_body(){
 
 determine_cc(){
     is_critical
-    if [[ $? -eq 1 ]]
+    if [[ $? -eq $on ]]
     then
         echo $email_critical_cc
     fi
 
     is_warning
-    if [[ $? -eq 1 ]]
+    if [[ $? -eq $on ]]
     then
         echo $email_warning_cc
     fi
 
     is_informational
-    if [[ $? -eq 1 ]]
+    if [[ $? -eq $on ]]
     then
         echo $email_informational_cc
     fi
@@ -173,19 +189,19 @@ determine_cc(){
 
 determine_attachment(){
     is_critical
-    if [[ $? -eq 1 ]]
+    if [[ $? -eq $on ]]
     then
         echo $email_critical_attachment
     fi
 
     is_warning
-    if [[ $? -eq 1 ]]
+    if [[ $? -eq $on ]]
     then
         echo $email_warning_attachment
     fi
 
     is_informational
-    if [[ $? -eq 1 ]]
+    if [[ $? -eq $on ]]
     then
         echo $email_informational_attachment
     fi
@@ -200,55 +216,37 @@ determine_attachment(){
 
 if [[ $# -ne 2 ]];
 then
-    echo "not enough arguments passed to the script."
-    echo "Aborting"
-    exit 1
+    abort_message "not enough arguments passed to the script."
 fi
-
 
 getopts "ciw" opt;
 case $opt in
-    c) critical_flag=1
+    c) critical_flag=$on
     ;;
-    i) informational_flag=1
+    i) informational_flag=$on
     ;;
-    w) warning_flag=1
+    w) warning_flag=$on
     ;;
-    *) usage; exit 1;
+    *) usage
     ;;
-    ?) usage; exit 1;
+    ?) usage
     ;;
 esac
 
 check_flags
-if [[ $? -ne 0 ]];
-then
-    echo "more than 1 flag is on."
-    echo "Critical Flag: " $critical_flag
-    echo "Warning Flag: " $warning_flag
-    echo "Informational Flag: " $informational_flag
-    echo "Aborting"
-    exit 1
-fi
-
 
 email_file=$2
 if ! [[ -s $email_file ]];
 then
-    echo "parameter file does not exist or is empty."
-    echo "Aborting"
-    exit 1
+    abort_message "parameter file does not exist or is empty."
 fi
 
 
 . $email_file
 if [[ $? -ne 0 ]];
 then
-    echo "not able to source provided parameter file."
-    echo "Aborting"
-    exit 1
+    abort_message "not able to source provided parameter file."
 fi
-
 
 ###########################################
 #
@@ -258,41 +256,31 @@ fi
 
 l_email_body=`determine_body`
 check_parm_value $l_email_body
-if [[ $? -eq 1 ]];
+if [[ $? -eq $off ]];
 then
-    echo "Email Body not found in the given paraameter file for the flag passed to the script."
-    echo "Aborting"
-    exit 1
+    abort_for_required_parms "Email Body"
 fi
-
 
 l_email_from=`determine_from`
 check_parm_value $l_email_from
-if [[ $? -eq 1 ]];
+if [[ $? -eq $off ]];
 then
-    echo "Email From not found in the given parameter file for the flag passed to the script."
-    echo "Aborting"
-    exit 1
+    abort_for_required_parms "Email From"
 fi
-
 
 l_email_subject=`determine_subject`
 check_parm_value $l_email_subject
-if [[ $? -eq 1 ]];
+if [[ $? -eq $off ]];
 then
-    echo "Email Subject not found in the given parameter file for the flag passed to the script."
-    echo "Aborting"
-    exit 1
+    abort_for_required_parms "Email Subject"
 fi
 
 
 l_email_to=`determine_to`
 check_parm_value $l_email_to
-if [[ $? -eq 1 ]];
+if [[ $? -eq $off ]];
 then
-    echo "Email To not found in the given parameter file for the flag passed to the script."
-    echo "Aborting"
-    exit 1
+    abort_for_required_parms "Email To"
 fi
 
 
@@ -307,26 +295,26 @@ cmd="echo -e '$l_email_body' | mailx -S from=$l_email_from -s \"$l_email_subject
 
 l_email_cc=`determine_cc`
 check_parm_value $l_email_cc
-if [[ $? -eq 0 ]];
+if [[ $? -eq $on ]];
 then
     cmd="$cmd -c $l_email_cc"
 else
-    echo "no associated cc parameter in given parameter file. skipping"
+    skip_optional_parms_msg "cc"
 fi
+
 
 l_email_attachment=`determine_attachment`
 check_parm_value $l_email_attachment
-if [[ $? -eq 0 ]];
+if [[ $? -eq $on ]];
 then
     cmd="$cmd -a $l_email_attachment"
 else
-    echo "no associated attachment parameter in given config file. skipping"
+    skip_optional_parms_msg "attachment"
 fi
 
 
 #do this step last
 cmd="$cmd $l_email_to"
-
 
 ###########################################
 #
@@ -334,13 +322,9 @@ cmd="$cmd $l_email_to"
 #
 ###########################################
 
-
-eval "$cmd"
-#echo "$cmd"
+#eval "$cmd"
+echo "$cmd"
 if [[ $? -ne 0 ]];
 then
-    echo "NOT ABLE TO RUN DYNAMIC COMMAND."
-    echo "COMMAND CREATED: $cmd"
-    echo "ABORTING"
-    exit 1
+    abort_message "NOT ABLE TO RUN DYNAMIC COMMAND.\nCOMMAND CREATED: $cmd"
 fi

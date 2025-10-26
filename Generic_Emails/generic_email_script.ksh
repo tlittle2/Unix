@@ -136,6 +136,24 @@ check_required_variables(){
     check_required_parm "Email_From" $l_email_from
     check_required_parm "Email_Subject" $l_email_subject
     check_required_parm "Email_To" $l_email_to
+
+    eval_flag $critical_flag
+    if [[ $? -eq $on ]]
+    then
+        l_email_subject="CRITICAL: $l_email_subject"
+    fi
+
+    eval_flag $warning_flag
+    if [[ $? -eq $on ]]
+    then
+        l_email_subject="Warning: $l_email_subject"
+    fi
+
+    eval_flag $informational_flag
+    if [[ $? -eq $on ]]
+    then
+        l_email_subject="Informational: $l_email_subject"
+    fi
 }
 
 add_to_cmd(){
@@ -156,7 +174,8 @@ skip_optional_parms_msg(){
 }
 
 build_command(){
-    cmd="echo -e '$l_email_body' | mailx -S from=$l_email_from -s \"$l_email_subject\""
+    #cmd="echo -e '$l_email_body' | mailx -S from=$l_email_from -s \"$l_email_subject\""
+    add_to_cmd "echo -e '$l_email_body' | mailx -S from=$l_email_from -s \"$l_email_subject\""
 
     check_optional_parm $l_email_cc
     if [[ $? -eq $on ]];
@@ -174,7 +193,7 @@ build_command(){
         skip_optional_parms_msg "attachment"
     fi
 
-    cmd="$cmd $l_email_to" #do this step last
+    add_to_cmd $l_email_to
 }
 
 run_command(){
